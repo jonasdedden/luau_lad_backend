@@ -1,0 +1,20 @@
+[package]
+name = "bevy_mod_scripting_luau"
+description = "Native Luau (.d.luau) definition-file backend for bevy_mod_scripting LAD files"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/jonasdedden/bevy_mod_scripting_luau"
+keywords = ["bevy", "scripting", "luau", "ladfile"]
+categories = ["game-development"]
+readme = "README.md"
+
+[dependencies]
+# The LAD file format + the `LadFilePlugin` processor trait. The backend is pure
+# string generation over these types, so this is the only runtime dependency.
+ladfile = "0.19"
+log = "0.4"
+
+[[bin]]
+name = "lad-luau"
+path = "src/main.rs"
