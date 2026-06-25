@@ -64,6 +64,17 @@ luau-lsp analyze --defs=bindings.d.luau scripts/level1.luau
 { "luau-lsp.types.definitionFiles": ["bindings.d.luau"] }
 ```
 
+## Testing
+
+Unit tests cover the conversion. An end-to-end integration test
+(`tests/luau_lsp.rs`) generates a `.d.luau` and has `luau-lsp` type-check a
+correct and a deliberately-wrong script against it. `luau-lsp` is external, so it
+runs only when the binary is found, otherwise it skips:
+
+```bash
+LUAU_LSP=/path/to/luau-lsp cargo test   # or have `luau-lsp` on PATH
+```
+
 ## Status & scope
 
 This is an early, standalone backend. It covers the common surface (named struct
