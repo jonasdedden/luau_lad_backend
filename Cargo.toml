@@ -18,3 +18,11 @@ log = "0.4"
 [[bin]]
 name = "lad-luau"
 path = "src/main.rs"
+
+# The published crate depends only on `ladfile`. The fully-integrated Bevy +
+# bevy_mod_scripting test lives in a separate, non-published workspace member so
+# those heavy deps never enter this crate's tree. Run it with:
+#   cargo test -p bevy_integration_test   (or `cargo test --workspace`)
+[workspace]
+members = ["bevy_integration_test"]
+resolver = "2"

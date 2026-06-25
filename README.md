@@ -66,13 +66,26 @@ luau-lsp analyze --defs=bindings.d.luau scripts/level1.luau
 
 ## Testing
 
-Unit tests cover the conversion. An end-to-end integration test
-(`tests/luau_lsp.rs`) generates a `.d.luau` and has `luau-lsp` type-check a
-correct and a deliberately-wrong script against it. `luau-lsp` is external, so it
-runs only when the binary is found, otherwise it skips:
+Three layers, in increasing fidelity:
+
+1. **Unit tests** (`src/lib.rs`) — the conversion itself, including dynamic
+   type declaration and reserved-keyword handling.
+2. **Lightweight luau-lsp test** (`tests/luau_lsp.rs`) — generates a `.d.luau`
+   from the bundled example LAD file and has `luau-lsp` type-check a correct and a
+   wrong script (a missing field on a generated class, a bad argument).
+3. **Full Bevy integration** (`bevy_integration_test/`, a separate, non-published
+   workspace member) — builds a real headless Bevy + `bevy_mod_scripting` app,
+   dumps its *live reflection registry* to a LAD file, converts it with this
+   crate, and has `luau-lsp` type-check scripts that use the generated component
+   classes and host globals. This keeps Bevy/BMS out of the published crate's
+   dependency tree.
+
+`luau-lsp` is an external binary, so the type-checking layers run only when it's
+found (via `LUAU_LSP` or `PATH`) and skip cleanly otherwise:
 
 ```bash
-LUAU_LSP=/path/to/luau-lsp cargo test   # or have `luau-lsp` on PATH
+LUAU_LSP=/path/to/luau-lsp cargo test --workspace   # everything
+LUAU_LSP=/path/to/luau-lsp cargo test               # core crate only (fast)
 ```
 
 ## Status & scope

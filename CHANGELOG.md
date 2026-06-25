@@ -16,3 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `lad-luau` CLI for converting a `.lad.json` to `.d.luau`.
   - Declares every type dynamically, skips reserved-keyword bindings instead of
     fabricating aliases, and quotes reserved struct-field names.
+  - Tests: unit tests, a lightweight `luau-lsp` round-trip, and a full Bevy +
+    `bevy_mod_scripting` integration (separate `bevy_integration_test` workspace
+    member) that type-checks scripts against definitions generated from a live
+    reflection registry.

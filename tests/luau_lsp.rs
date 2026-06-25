@@ -15,19 +15,22 @@
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-/// A script that uses the generated API correctly — must type-check clean.
+/// A script that uses the generated API correctly: the typed global function and
+/// a field on a generated class (reached via an honest cast). Must type-check.
 const GOOD_SCRIPT: &str = "\
 --!strict
 local n: number = hello_world(1)
+local s = (nil :: any) :: PlainStructType
+local _ = s.int_field
 local _ = n + 1
 ";
 
-/// A script with a type error (passing a string where a number is required) —
+/// Accesses a field that does not exist on the generated `PlainStructType` class —
 /// `luau-lsp` must reject it.
 const BAD_SCRIPT: &str = "\
 --!strict
-local n: number = hello_world(\"not a number\")
-local _ = n
+local s = (nil :: any) :: PlainStructType
+local _ = s.not_a_real_field
 ";
 
 #[test]
