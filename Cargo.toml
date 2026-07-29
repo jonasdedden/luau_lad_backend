@@ -1,10 +1,10 @@
 [package]
-name = "bevy_mod_scripting_luau"
+name = "luau_lad_backend"
 description = "Native Luau (.d.luau) definition-file backend for bevy_mod_scripting LAD files"
 version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/jonasdedden/bevy_mod_scripting_luau"
+repository = "https://github.com/jonasdedden/luau_lad_backend"
 keywords = ["bevy", "scripting", "luau", "ladfile"]
 categories = ["game-development"]
 readme = "README.md"

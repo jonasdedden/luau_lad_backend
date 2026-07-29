@@ -46,6 +46,18 @@ pub struct Health {
     pub max: f64,
 }
 
+/// Behavior stance of an entity — a plain unit enum, exercising the exported
+/// variant-name union and the typed `variant_name` override.
+#[derive(Reflect, Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[reflect(Default)]
+pub enum Stance {
+    /// Standing around.
+    #[default]
+    Idle,
+    /// Attacking on sight.
+    Aggressive,
+}
+
 /// Build a headless scripting app, register the components and host globals, and
 /// dump the reflection registry to a LAD file in `out_dir`. Returns the path of
 /// the written `bindings.lad.json`.
@@ -59,7 +71,8 @@ pub fn generate_lad(out_dir: &Path) -> PathBuf {
     // The component surface scripts get to see.
     app.register_type::<Position>()
         .register_type::<Velocity>()
-        .register_type::<Health>();
+        .register_type::<Health>()
+        .register_type::<Stance>();
 
     // Host functions exposed to scripts as plain Luau globals.
     {

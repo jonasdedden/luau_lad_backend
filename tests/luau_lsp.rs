@@ -15,13 +15,16 @@
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-/// A script that uses the generated API correctly: the typed global function and
-/// a field on a generated class (reached via an honest cast). Must type-check.
+/// A script that uses the generated API correctly: the typed global function, a
+/// field on a generated class (reached via an honest cast), and the exported
+/// enum variant-name union. Must type-check.
 const GOOD_SCRIPT: &str = "\
 --!strict
 local n: number = hello_world(1)
 local s = (nil :: any) :: PlainStructType
 local _ = s.int_field
+local v: EnumTypeVariant = \"Unit\"
+local _ = v
 local _ = n + 1
 ";
 
@@ -31,6 +34,14 @@ const BAD_SCRIPT: &str = "\
 --!strict
 local s = (nil :: any) :: PlainStructType
 local _ = s.not_a_real_field
+";
+
+/// Uses a variant name outside the generated `EnumTypeVariant` union — `luau-lsp`
+/// must reject it.
+const BAD_VARIANT_SCRIPT: &str = "\
+--!strict
+local v: EnumTypeVariant = \"Nope\"
+local _ = v
 ";
 
 #[test]
@@ -45,7 +56,7 @@ fn luau_lsp_typechecks_generated_defs() {
 
     // Generate the definition file from the canonical example LAD file.
     let lad = ladfile::parse_lad_file(ladfile::EXAMPLE_LADFILE).expect("example LAD file parses");
-    let defs = bevy_mod_scripting_luau::lad_to_luau(&lad);
+    let defs = luau_lad_backend::lad_to_luau(&lad);
 
     // Sanity: the surface the scripts rely on must actually be present.
     assert!(
@@ -81,6 +92,21 @@ fn luau_lsp_typechecks_generated_defs() {
         bad.combined().contains("TypeError"),
         "expected a TypeError diagnostic, got:\n{}",
         bad.combined()
+    );
+
+    // A variant name outside the generated union must be rejected too.
+    let bad_variant_path = dir.join("bad_variant.luau");
+    std::fs::write(&bad_variant_path, BAD_VARIANT_SCRIPT).unwrap();
+    let bad_variant = analyze(&lsp, &defs_path, &bad_variant_path);
+    assert!(
+        !bad_variant.status.success(),
+        "luau-lsp accepted a variant outside the union:\n{}",
+        bad_variant.combined()
+    );
+    assert!(
+        bad_variant.combined().contains("TypeError"),
+        "expected a TypeError diagnostic, got:\n{}",
+        bad_variant.combined()
     );
 
     let _ = std::fs::remove_dir_all(&dir);

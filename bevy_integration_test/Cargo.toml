@@ -1,6 +1,6 @@
 # Non-published integration crate. It builds a real headless Bevy +
 # bevy_mod_scripting app, dumps its reflection registry to a LAD file, and lets the
-# tests convert that with `bevy_mod_scripting_luau` and type-check scripts against
+# tests convert that with `luau_lad_backend` and type-check scripts against
 # the result. Kept separate so the published crate's dependency tree stays minimal.
 [package]
 name = "bevy_integration_test"
@@ -9,7 +9,7 @@ edition = "2021"
 publish = false
 
 [dependencies]
-bevy_mod_scripting_luau = { path = ".." }
+luau_lad_backend = { path = ".." }
 
 # Headless Bevy: ECS + reflection + asset loading + logging, no rendering.
 bevy = { version = "0.18", default-features = false, features = [
@@ -28,6 +28,6 @@ bevy_mod_scripting = { version = "0.19", default-features = false, features = [
 ] }
 
 # Produces the reflection dump (`ScriptingFilesGenerationPlugin`); `ladfile` parses
-# it back so the test can feed it to `bevy_mod_scripting_luau`.
+# it back so the test can feed it to `luau_lad_backend`.
 ladfile_builder = { version = "0.19", default-features = false }
 ladfile = "0.19"
