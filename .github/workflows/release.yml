@@ -51,16 +51,6 @@ jobs:
       # and the verification build. If this fails, nothing has happened yet.
       - run: cargo publish -p luau_lad_backend --dry-run
 
-      # The changelog section for this version, verbatim, as the release notes.
-      - name: Extract the changelog section
-        run: |
-          awk -v ver="$VERSION" '
-            index($0, "## [" ver "]") == 1 { found = 1; next }
-            found && index($0, "## [") == 1 { exit }
-            found { print }
-          ' CHANGELOG.md > release-notes.md
-          cat release-notes.md
-
       # Reversible, so it goes before the publish: a GitHub release can be
       # deleted. When the release already exists — the tag came from drafting one
       # in the UI — its notes are left exactly as written rather than clobbered.
@@ -69,8 +59,14 @@ jobs:
           if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
             echo "::notice::release $GITHUB_REF_NAME already exists; leaving its notes as they are"
           else
-            gh release create "$GITHUB_REF_NAME" \
-              --title "$GITHUB_REF_NAME" --notes-file release-notes.md --verify-tag
+            # GitHub's own generator writes the notes: a line per merged PR,
+            # the new-contributor list, and the compare link. The one prepended
+            # line points at the curated changelog, which stays the long-form
+            # record. Note the generator lists *pull requests* — work pushed
+            # straight to main shows up only in the compare link.
+            gh release create "$GITHUB_REF_NAME" --verify-tag \
+              --title "$GITHUB_REF_NAME" --generate-notes \
+              --notes "Curated notes for this release: [CHANGELOG.md](https://github.com/${GITHUB_REPOSITORY}/blob/${GITHUB_REF_NAME}/CHANGELOG.md)"
           fi
         env:
           GH_TOKEN: ${{ github.token }}
