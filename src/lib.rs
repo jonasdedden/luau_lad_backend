@@ -4,7 +4,7 @@
 //! `bevy_mod_scripting` (BMS) ships LAD post-processors for the Lua Language
 //! Server (`--- @class` `.lua`) and for mdbook, but no native Luau one — and
 //! [`luau-lsp`] cannot consume the LuaLS dialect. This crate is that missing
-//! backend: it turns a [`LadFile`] into `declare class … end` / `declare name: T`
+//! backend: it turns a [`LadFile`] into `declare extern type … end` / `declare name: T`
 //! definitions that `luau-lsp analyze --defs=…` checks scripts against.
 //!
 //! Every type in the LAD file is declared dynamically from the registry — no type
@@ -386,7 +386,9 @@ impl<'a> Converter<'a> {
         // them once here and having every class extend it mirrors the actual
         // dispatch (subclass members legitimately shadow these).
         if let Some(reference_id) = &self.reflect_ref {
-            out.push_str(&format!("declare class {REFLECT_REFERENCE_CLASS}\n"));
+            out.push_str(&format!(
+                "declare extern type {REFLECT_REFERENCE_CLASS} with\n"
+            ));
             let mut fns = methods.remove(reference_id).unwrap_or_default();
             fns.sort_by_key(|f| f.identifier.to_string());
             for func in fns {
@@ -450,7 +452,7 @@ impl<'a> Converter<'a> {
             if let Some(doc) = &def.documentation {
                 push_doc(&mut out, doc, "");
             }
-            out.push_str(&format!("declare class {name}{extends}\n"));
+            out.push_str(&format!("declare extern type {name}{extends} with\n"));
 
             // Associated functions: a method if its first script-visible argument is
             // the owning type, otherwise a dot-callable function field.
@@ -1096,18 +1098,18 @@ mod tests {
         // components/resources, and nothing is hard-coded. The example file records
         // the ReflectReference proxy type, so every class extends the base class.
         assert!(
-            luau.contains("declare class PlainStructType extends ReflectReference"),
+            luau.contains("declare extern type PlainStructType extends ReflectReference with"),
             "{luau}"
         );
         assert!(
-            luau.contains("declare class EnumType extends ReflectReference"),
+            luau.contains("declare extern type EnumType extends ReflectReference with"),
             "{luau}"
         );
         assert!(
-            luau.contains("declare class TupleStructType extends ReflectReference"),
+            luau.contains("declare extern type TupleStructType extends ReflectReference with"),
             "{luau}"
         );
-        assert!(luau.contains("declare class ReflectReference\n"), "{luau}");
+        assert!(luau.contains("declare extern type ReflectReference with\n"), "{luau}");
         // A plain struct's fields are always present on a live reference, so
         // they are *not* optional. (Asserted on the whole member line: the
         // construct-payload alias below carries the same name optionally.)
@@ -1487,7 +1489,7 @@ mod tests {
         let luau = lad_to_luau(&lad);
 
         // The base class carries the proxy methods as colon-methods.
-        assert!(luau.contains("declare class ReflectReference\n"), "{luau}");
+        assert!(luau.contains("declare extern type ReflectReference with\n"), "{luau}");
         assert!(
             luau.contains("\tfunction variant_name(self): string?"),
             "{luau}"
@@ -1495,11 +1497,11 @@ mod tests {
         assert!(luau.contains("\tfunction display(self): string"), "{luau}");
         // Every declared class extends it.
         assert!(
-            luau.contains("declare class Stance extends ReflectReference"),
+            luau.contains("declare extern type Stance extends ReflectReference with"),
             "{luau}"
         );
         assert!(
-            luau.contains("declare class Mixed extends ReflectReference"),
+            luau.contains("declare extern type Mixed extends ReflectReference with"),
             "{luau}"
         );
 

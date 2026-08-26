@@ -15,7 +15,7 @@ Initial release: a native Luau (`.d.luau`) LAD backend, supporting
 ### Added
 
 - **Core conversion.** `lad_to_luau(&LadFile) -> String` emits
-  `declare class … end` / `declare name: T` definitions that
+  `declare extern type … end` / `declare name: T` definitions that
   `luau-lsp analyze --defs=…` checks scripts against. `lad_to_luau_with` takes
   an `Options` for the one part of the output that is a trade-off rather than a
   rendering (`init_types`, below).
@@ -26,6 +26,9 @@ Initial release: a native Luau (`.d.luau`) LAD backend, supporting
   line and exiting non-zero when stale — the CI check every project that commits
   its definitions needs), plus `--help`, `--version`, `--fflags` and
   `--no-init-types`.
+- **Luau's extern-type syntax** (`declare extern type X with … end`), verified
+  against `luau-lsp` 1.45 through 1.69. 1.69 removed the older
+  `declare class … end` spelling; the versions below it accept both.
 - **Every type is declared dynamically** from the registry. Nothing is
   hard-coded by name and nothing is restricted to components or resources;
   reserved-keyword bindings are skipped rather than given fabricated aliases,

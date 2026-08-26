@@ -122,10 +122,10 @@ fn generated_defs_typecheck_in_a_real_environment() {
     //    their real fields — proving types are declared dynamically from the
     //    registry, not hard-coded.
     for needle in [
-        "declare class Velocity",
-        "declare class Health",
-        "declare class Position",
-        "declare class World",
+        "declare extern type Velocity",
+        "declare extern type Health",
+        "declare extern type Position",
+        "declare extern type World",
         "declare world: World",
         "declare function magnitude(",
         // The phantom-typed registration machinery.
@@ -137,11 +137,11 @@ fn generated_defs_typecheck_in_a_real_environment() {
         // Enum variant support: exported union + typed variant_name override,
         // derived from the live registry (BMS records the backing function).
         "export type StanceVariant = \"Idle\" | \"Aggressive\"",
-        "declare class Stance extends ReflectReference",
+        "declare extern type Stance extends ReflectReference with",
         "\tfunction variant_name(self): StanceVariant",
         // The materialized reference base class every declared class extends.
-        "declare class ReflectReference\n",
-        "declare class Health extends ReflectReference",
+        "declare extern type ReflectReference with\n",
+        "declare extern type Health extends ReflectReference with",
     ] {
         assert!(defs.contains(needle), "generated defs missing `{needle}`");
     }

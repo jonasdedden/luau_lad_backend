@@ -17,7 +17,7 @@ dialect. This is that missing backend.
 ## Design
 
 - **Every type is declared dynamically.** All types in the LAD file get a
-  `declare class … end`; nothing is hard-coded (`World`, `Entity`, etc. are just
+  `declare extern type … end`; nothing is hard-coded (`World`, `Entity`, etc. are just
   types in the file) and nothing is restricted to components/resources.
 - **Optional only where it is earned.** A plain struct's fields are always
   present on a live reference, so they are declared non-optional (`x: number`) —
@@ -75,7 +75,7 @@ dialect. This is that missing backend.
   ```luau
   export type Reg<T> = ScriptComponentRegistration & { __component: T }
 
-  declare class World
+  declare extern type World with
       get_component: <T>(entity: Entity, registration: Reg<T>) -> T?
       insert_component: <T>(entity: Entity, registration: Reg<T>, value: T) -> nil
       ...
@@ -96,7 +96,7 @@ dialect. This is that missing backend.
 
   ```luau
   export type StanceVariant = "Idle" | "Aggressive"
-  declare class Stance extends ReflectReference
+  declare extern type Stance extends ReflectReference with
       function variant_name(self): StanceVariant
   end
   ```
@@ -129,8 +129,13 @@ cargo install luau_lad_backend      # the `lad-luau` CLI
 ```
 
 Supports `bevy_mod_scripting` 0.17–0.19 (`ladfile` 0.17–0.19); the version is
-picked to match whatever BMS your project already pulls in. For BMS 0.20–0.21,
-use `luau_lad_backend` 0.2. Requires Rust 1.89.
+picked to match whatever BMS your project already pulls in. Support for BMS
+0.20–0.21 is prepared on the `0.2.0` branch. Requires Rust 1.89.
+
+Definitions are emitted in Luau's extern-type syntax
+(`declare extern type X with … end`), verified against `luau-lsp` 1.45 through
+1.69. 1.69 dropped the older `declare class … end` spelling; every version
+tested below it accepts both, so there is no version this costs you.
 
 ## Usage
 
