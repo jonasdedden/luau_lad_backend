@@ -5,9 +5,13 @@ version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/jonasdedden/luau_lad_backend"
+homepage = "https://github.com/jonasdedden/luau_lad_backend"
 keywords = ["bevy", "scripting", "luau", "ladfile"]
 categories = ["game-development"]
 readme = "README.md"
+# Not a chosen policy so much as a floor: `ladfile` pulls in `bevy_ecs`, which
+# declares `rust-version = "1.89"`. Verified by the `msrv` CI job.
+rust-version = "1.89"
 
 [dependencies]
 # The LAD file format + the `LadFilePlugin` processor trait. The backend is pure

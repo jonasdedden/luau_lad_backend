@@ -1,5 +1,10 @@
 # luau_lad_backend
 
+[![crates.io](https://img.shields.io/crates/v/luau_lad_backend.svg)](https://crates.io/crates/luau_lad_backend)
+[![docs.rs](https://img.shields.io/docsrs/luau_lad_backend)](https://docs.rs/luau_lad_backend)
+[![CI](https://github.com/jonasdedden/luau_lad_backend/actions/workflows/ci.yml/badge.svg)](https://github.com/jonasdedden/luau_lad_backend/actions/workflows/ci.yml)
+[![MSRV](https://img.shields.io/badge/MSRV-1.89-blue)](https://blog.rust-lang.org/2025/08/07/Rust-1.89.0.html)
+
 A native **Luau** (`.d.luau`) definition-file backend for
 [`bevy_mod_scripting`](https://github.com/makspll/bevy_mod_scripting) (BMS) LAD
 (Language Agnostic Definition) files, so Luau game scripts can be type-checked
@@ -115,6 +120,15 @@ dialect. This is that missing backend.
 - **Graceful fallback.** Anything that stays genuinely dynamic (`ScriptValue`
   payloads, `DynamicFunction` callbacks, asset handles, query results) becomes
   `any`, which Luau treats permissively, so scripts still type-check.
+
+## Install
+
+```bash
+cargo add luau_lad_backend          # library / generation-pipeline processor
+cargo install luau_lad_backend      # the `lad-luau` CLI
+```
+
+Targets `bevy_mod_scripting` 0.19 (`ladfile` 0.19). Requires Rust 1.89.
 
 ## Usage
 
