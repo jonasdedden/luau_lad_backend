@@ -13,7 +13,7 @@ jobs:
     name: test (stable)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       # The workspace includes `bevy_integration_test`, which builds a real
@@ -26,7 +26,7 @@ jobs:
     name: clippy (deny warnings)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
@@ -37,12 +37,14 @@ jobs:
     name: msrv (1.89)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
       - run: rustup toolchain install 1.89.0 --profile minimal
       - uses: Swatinem/rust-cache@v2
       # Check the *packaged* crate, not the workspace: `bevy_integration_test`
       # pulls deps that need a newer rustc, and building it here would mask the
       # published crate's real floor. `rust-version` in Cargo.toml must match.
+      # `--no-verify` writes only the `.crate` tarball, so unpack it ourselves.
       - run: cargo package -p luau_lad_backend --no-verify
+      - run: tar -xzf target/package/luau_lad_backend-*.crate -C target/package/
       - run: cd target/package/luau_lad_backend-*/ && cargo +1.89.0 check --all-targets
