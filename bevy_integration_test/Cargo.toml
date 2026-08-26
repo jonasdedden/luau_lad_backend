@@ -12,14 +12,14 @@ publish = false
 luau_lad_backend = { path = ".." }
 
 # Headless Bevy: ECS + reflection + asset loading + logging, no rendering.
-bevy = { version = "0.18", default-features = false, features = [
+bevy = { version = "0.19", default-features = false, features = [
     "std",
     "bevy_asset",
     "bevy_log",
 ] }
 
 # bevy_mod_scripting (BMS), Luau backend: ECS + reflect bindings + core functions.
-bevy_mod_scripting = { version = "0.19", default-features = false, features = [
+bevy_mod_scripting = { version = "0.21", default-features = false, features = [
     "lua",
     "luau",
     "core_functions",
@@ -29,5 +29,5 @@ bevy_mod_scripting = { version = "0.19", default-features = false, features = [
 
 # Produces the reflection dump (`ScriptingFilesGenerationPlugin`); `ladfile` parses
 # it back so the test can feed it to `luau_lad_backend`.
-ladfile_builder = { version = "0.19", default-features = false }
-ladfile = "0.19"
+ladfile_builder = { version = "0.21", default-features = false }
+ladfile = "0.21"

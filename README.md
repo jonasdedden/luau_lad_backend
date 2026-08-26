@@ -3,7 +3,7 @@
 [![crates.io](https://img.shields.io/crates/v/luau_lad_backend.svg)](https://crates.io/crates/luau_lad_backend)
 [![docs.rs](https://img.shields.io/docsrs/luau_lad_backend)](https://docs.rs/luau_lad_backend)
 [![CI](https://github.com/jonasdedden/luau_lad_backend/actions/workflows/ci.yml/badge.svg)](https://github.com/jonasdedden/luau_lad_backend/actions/workflows/ci.yml)
-[![MSRV](https://img.shields.io/badge/MSRV-1.89-blue)](https://blog.rust-lang.org/2025/08/07/Rust-1.89.0.html)
+[![MSRV](https://img.shields.io/badge/MSRV-1.95-blue)](https://github.com/jonasdedden/luau_lad_backend/blob/main/Cargo.toml)
 
 A native **Luau** (`.d.luau`) definition-file backend for
 [`bevy_mod_scripting`](https://github.com/makspll/bevy_mod_scripting) (BMS) LAD
@@ -128,9 +128,15 @@ cargo add luau_lad_backend          # library / generation-pipeline processor
 cargo install luau_lad_backend      # the `lad-luau` CLI
 ```
 
-Supports `bevy_mod_scripting` 0.17–0.19 (`ladfile` 0.17–0.19); the version is
-picked to match whatever BMS your project already pulls in. Support for BMS
-0.20–0.21 is prepared on the `0.2.0` branch. Requires Rust 1.89.
+| `luau_lad_backend` | `bevy_mod_scripting` | Bevy | MSRV |
+| --- | --- | --- | --- |
+| 0.2 | 0.20 – 0.21 | 0.18 – 0.19 | 1.95 |
+| 0.1 | 0.17 – 0.19 | 0.16 – 0.18 | 1.89 |
+
+Each release spans a range of BMS versions rather than pinning one: `ladfile` is
+a public dependency here, so cargo settles it on whatever your project's BMS
+already pulls in. The MSRV is inherited, not chosen: it is whatever `bevy_ecs`
+demands through `ladfile`.
 
 Definitions are emitted in Luau's extern-type syntax
 (`declare extern type X with … end`), verified against `luau-lsp` 1.45 through

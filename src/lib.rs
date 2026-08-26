@@ -902,6 +902,10 @@ impl<'a> Converter<'a> {
                     _ => format!("{{ {} }}", types.join(" | ")),
                 }
             }
+            // A variadic tuple carries no element types at all, so the union
+            // above has nothing to draw on: `{ any }` is as much as can be said
+            // honestly, and it keeps the "a tuple is an array" shape consistent.
+            LadFieldOrVariableKind::UntypedTuple => "{ any }".to_string(),
             LadFieldOrVariableKind::Primitive(ReflectionPrimitiveKind::ReflectReference)
                 if ref_as_t =>
             {
@@ -999,7 +1003,7 @@ fn contains_string_primitive(kind: &LadFieldOrVariableKind) -> bool {
             p,
             ReflectionPrimitiveKind::Str | ReflectionPrimitiveKind::String
         ),
-        Ref(_) | Mut(_) | Val(_) | Unknown(_) => false,
+        Ref(_) | Mut(_) | Val(_) | Unknown(_) | UntypedTuple => false,
         Option(inner) | Vec(inner) | Array(inner, _) | HashSet(inner) | InteropResult(inner) => {
             contains_string_primitive(inner)
         }
@@ -1013,7 +1017,7 @@ fn contains_reflect_reference(kind: &LadFieldOrVariableKind) -> bool {
     use LadFieldOrVariableKind::*;
     match kind {
         Primitive(p) => matches!(p, ReflectionPrimitiveKind::ReflectReference),
-        Ref(_) | Mut(_) | Val(_) | Unknown(_) => false,
+        Ref(_) | Mut(_) | Val(_) | Unknown(_) | UntypedTuple => false,
         Option(inner) | Vec(inner) | Array(inner, _) | HashSet(inner) | InteropResult(inner) => {
             contains_reflect_reference(inner)
         }
