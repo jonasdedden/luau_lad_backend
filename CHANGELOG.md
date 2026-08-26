@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-08-26
+
+Support for `bevy_mod_scripting` 0.20–0.21 (`ladfile` 0.20–0.21). Feature-wise
+identical to 0.1.0 — the split exists because `ladfile` is a public dependency,
+so one crate version cannot span both `ladfile` generations. Projects on BMS
+0.17–0.19 stay on `luau_lad_backend` 0.1.
+
+### Changed
+
+- **`ladfile` 0.20–0.21** (was 0.17–0.19). `ladfile` 0.20 added the
+  `LadFieldOrVariableKind::UntypedTuple` kind — a variadic tuple — which is now
+  rendered as `{ any }`: it carries no element types, so the union a fixed tuple
+  renders has nothing to draw on, and `{ any }` keeps the "a tuple is an array"
+  shape consistent. It contributes no string primitive and no `ReflectReference`
+  to the kind walks, so it never triggers the generic registration rewrite.
+- **MSRV 1.95** (was 1.89), inherited rather than chosen: `ladfile` 0.21 pulls
+  in `bevy_ecs` 0.19, which declares it.
+- The `bevy_integration_test` workspace member now builds against Bevy 0.19 and
+  BMS 0.21.
+
 ## [0.1.0] - 2026-08-26
 
 Initial release: a native Luau (`.d.luau`) LAD backend, supporting
@@ -109,5 +129,6 @@ Initial release: a native Luau (`.d.luau`) LAD backend, supporting
   field key cannot be: it is what reflect indexing uses at runtime, so a renamed
   field would be backed by nothing.
 
-[Unreleased]: https://github.com/jonasdedden/luau_lad_backend/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/jonasdedden/luau_lad_backend/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/jonasdedden/luau_lad_backend/releases/tag/v0.2.0
 [0.1.0]: https://github.com/jonasdedden/luau_lad_backend/releases/tag/v0.1.0
