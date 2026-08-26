@@ -1,0 +1,24 @@
+name: Set up luau-lsp
+description: >
+  Download a pinned luau-lsp release and export LUAU_LSP, so the round-trip
+  tests actually run instead of skipping themselves.
+
+inputs:
+  version:
+    description: luau-lsp release tag to install.
+    required: false
+    default: "1.69.0"
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        LUAU_LSP_VERSION: ${{ inputs.version }}
+      run: |
+        curl -sSLf -o "$RUNNER_TEMP/luau-lsp.zip" \
+          "https://github.com/JohnnyMorganz/luau-lsp/releases/download/$LUAU_LSP_VERSION/luau-lsp-linux-x86_64.zip"
+        unzip -q -o "$RUNNER_TEMP/luau-lsp.zip" -d "$RUNNER_TEMP/luau-lsp"
+        chmod +x "$RUNNER_TEMP/luau-lsp/luau-lsp"
+        echo "LUAU_LSP=$RUNNER_TEMP/luau-lsp/luau-lsp" >> "$GITHUB_ENV"
+        "$RUNNER_TEMP/luau-lsp/luau-lsp" --version

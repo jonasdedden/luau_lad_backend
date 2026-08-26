@@ -1,9 +1,10 @@
 name: Release
 
-# Publishing is driven by the tag: push `v0.2.0` and this publishes 0.2.0 to
-# crates.io and opens the matching GitHub release. `workflow_dispatch` covers
-# re-runs and tags pushed before this workflow existed:
-#   gh workflow run release.yml --ref v0.1.0
+# Two ways in, both landing here via the tag:
+#   - push a tag:            git tag -a v0.1.0 -m … && git push origin v0.1.0
+#   - draft a GitHub release in the UI and let it create the tag
+# `workflow_dispatch` covers re-runs; dispatch it from the tag, not a branch,
+# since the version check below reads the tag name.
 on:
   push:
     tags: ["v*"]
@@ -12,6 +13,10 @@ on:
 env:
   CARGO_TERM_COLOR: always
 
+# The steps are ordered by reversibility, cheapest and most-undoable first:
+# every check runs, then the GitHub release (deletable), and only last the
+# crates.io publish — which can be yanked but never replaced or re-uploaded.
+# Anything that can fail should fail before that point, not after it.
 jobs:
   publish:
     name: publish to crates.io
@@ -24,7 +29,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
 
       # A tag that disagrees with the manifest would publish a version nobody
-      # asked for, and crates.io versions cannot be replaced — only yanked.
+      # asked for, and that cannot be taken back.
       - name: Verify the tag matches the manifest version
         run: |
           version=$(cargo metadata --format-version 1 --no-deps \
@@ -37,18 +42,14 @@ jobs:
           }
           echo "VERSION=$version" >> "$GITHUB_ENV"
 
-      # Only the published crate: the workspace's Bevy integration test is
-      # covered by CI, and nothing here should be able to block a release on it.
+      # Releasing must not skip the test that proves the generated definitions
+      # still parse — that is the one this crate exists to get right.
+      - uses: ./.github/actions/setup-luau-lsp
       - run: cargo test -p luau_lad_backend --all-targets
 
-      - name: Publish
-        run: cargo publish -p luau_lad_backend
-        env:
-          # A crates.io API token with publish-update scope, stored as a repo
-          # secret. Once the crate exists, this can be swapped for crates.io
-          # Trusted Publishing (rust-lang/crates-io-auth-action + an
-          # `id-token: write` permission), which needs no long-lived secret.
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+      # Everything the real publish does except the irreversible part: packaging
+      # and the verification build. If this fails, nothing has happened yet.
+      - run: cargo publish -p luau_lad_backend --dry-run
 
       # The changelog section for this version, verbatim, as the release notes.
       - name: Extract the changelog section
@@ -60,7 +61,33 @@ jobs:
           ' CHANGELOG.md > release-notes.md
           cat release-notes.md
 
+      # Reversible, so it goes before the publish: a GitHub release can be
+      # deleted. When the release already exists — the tag came from drafting one
+      # in the UI — its notes are left exactly as written rather than clobbered.
       - name: Create the GitHub release
-        run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file release-notes.md --verify-tag
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            echo "::notice::release $GITHUB_REF_NAME already exists; leaving its notes as they are"
+          else
+            gh release create "$GITHUB_REF_NAME" \
+              --title "$GITHUB_REF_NAME" --notes-file release-notes.md --verify-tag
+          fi
         env:
           GH_TOKEN: ${{ github.token }}
+
+      # Last, because it is the one step that cannot be undone. Skipped if the
+      # version is already up, so a re-run after a later failure is harmless.
+      - name: Publish to crates.io
+        run: |
+          if curl -sSfo /dev/null -A "luau_lad_backend release workflow" \
+               "https://crates.io/api/v1/crates/luau_lad_backend/$VERSION" 2>/dev/null; then
+            echo "::notice::$VERSION is already on crates.io; nothing to publish"
+          else
+            cargo publish -p luau_lad_backend
+          fi
+        env:
+          # A crates.io API token with publish-update scope, stored as a repo
+          # secret. Now that the crate exists, this can be swapped for crates.io
+          # Trusted Publishing (rust-lang/crates-io-auth-action + an
+          # `id-token: write` permission), which needs no long-lived secret.
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
