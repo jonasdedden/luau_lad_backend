@@ -34,18 +34,30 @@ jobs:
       - run: cargo clippy --workspace --all-targets -- -D warnings
 
   msrv:
-    name: msrv (1.89)
+    name: msrv
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
-      - run: rustup toolchain install 1.89.0 --profile minimal
       - uses: Swatinem/rust-cache@v2
+
+      # The manifest is the single source of truth; this job checks with exactly
+      # what it declares, so the two cannot drift.
+      - name: Read rust-version from the manifest
+        run: |
+          msrv=$(cargo metadata --format-version 1 --no-deps \
+            | jq -r '.packages[] | select(.name == "luau_lad_backend") | .rust_version')
+          [ -n "$msrv" ] && [ "$msrv" != "null" ] || {
+            echo "::error::no rust-version in Cargo.toml"; exit 1;
+          }
+          echo "MSRV=$msrv" >> "$GITHUB_ENV"
+      - run: rustup toolchain install "$MSRV" --profile minimal
+
       # Check the *packaged* crate, not the workspace: `bevy_integration_test`
       # pulls deps that need a newer rustc, and building it here would mask the
-      # published crate's real floor. `rust-version` in Cargo.toml must match.
-      # `--no-verify` writes only the `.crate` tarball, so unpack it ourselves —
-      # outside `target/`, or rust-cache's cleanup walks the nested build tree.
+      # published crate's real floor. `--no-verify` writes only the `.crate`
+      # tarball, so unpack it ourselves — outside `target/`, or rust-cache's
+      # cleanup walks the nested build tree.
       - run: cargo package -p luau_lad_backend --no-verify
       - run: mkdir -p "$RUNNER_TEMP/msrv" && tar -xzf target/package/luau_lad_backend-*.crate -C "$RUNNER_TEMP/msrv"
-      - run: cd "$RUNNER_TEMP"/msrv/luau_lad_backend-*/ && cargo +1.89.0 check --all-targets
+      - run: cd "$RUNNER_TEMP"/msrv/luau_lad_backend-*/ && cargo "+$MSRV" check --all-targets

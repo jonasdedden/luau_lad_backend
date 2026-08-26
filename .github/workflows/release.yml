@@ -1,0 +1,66 @@
+name: Release
+
+# Publishing is driven by the tag: push `v0.2.0` and this publishes 0.2.0 to
+# crates.io and opens the matching GitHub release. `workflow_dispatch` covers
+# re-runs and tags pushed before this workflow existed:
+#   gh workflow run release.yml --ref v0.1.0
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  publish:
+    name: publish to crates.io
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # to create the GitHub release
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+
+      # A tag that disagrees with the manifest would publish a version nobody
+      # asked for, and crates.io versions cannot be replaced — only yanked.
+      - name: Verify the tag matches the manifest version
+        run: |
+          version=$(cargo metadata --format-version 1 --no-deps \
+            | jq -r '.packages[] | select(.name == "luau_lad_backend") | .version')
+          tag="${GITHUB_REF_NAME#v}"
+          echo "manifest=$version tag=$tag"
+          [ "$version" = "$tag" ] || {
+            echo "::error::tag $GITHUB_REF_NAME does not match Cargo.toml version $version"
+            exit 1
+          }
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+
+      # Only the published crate: the workspace's Bevy integration test is
+      # covered by CI, and nothing here should be able to block a release on it.
+      - run: cargo test -p luau_lad_backend --all-targets
+
+      - name: Publish
+        run: cargo publish -p luau_lad_backend
+        env:
+          # A crates.io API token with publish-update scope, stored as a repo
+          # secret. Once the crate exists, this can be swapped for crates.io
+          # Trusted Publishing (rust-lang/crates-io-auth-action + an
+          # `id-token: write` permission), which needs no long-lived secret.
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+      # The changelog section for this version, verbatim, as the release notes.
+      - name: Extract the changelog section
+        run: |
+          awk -v ver="$VERSION" '
+            $0 ~ "^## \\[" ver "\\]" { found = 1; next }
+            found && /^## \[/ { exit }
+            found { print }
+          ' CHANGELOG.md > release-notes.md
+          cat release-notes.md
+
+      - name: Create the GitHub release
+        run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file release-notes.md --verify-tag
+        env:
+          GH_TOKEN: ${{ github.token }}
