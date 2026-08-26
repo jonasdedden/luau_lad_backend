@@ -9,8 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.1.0] - 2026-08-26
 
-Initial release: a native Luau (`.d.luau`) LAD backend, targeting
-`bevy_mod_scripting` 0.19 (`ladfile` 0.19).
+Initial release: a native Luau (`.d.luau`) LAD backend, supporting
+`bevy_mod_scripting` 0.17–0.19 (`ladfile` 0.17–0.19).
 
 ### Added
 

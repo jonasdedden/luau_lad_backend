@@ -128,7 +128,9 @@ cargo add luau_lad_backend          # library / generation-pipeline processor
 cargo install luau_lad_backend      # the `lad-luau` CLI
 ```
 
-Targets `bevy_mod_scripting` 0.19 (`ladfile` 0.19). Requires Rust 1.89.
+Supports `bevy_mod_scripting` 0.17–0.19 (`ladfile` 0.17–0.19); the version is
+picked to match whatever BMS your project already pulls in. For BMS 0.20–0.21,
+use `luau_lad_backend` 0.2. Requires Rust 1.89.
 
 ## Usage
 
