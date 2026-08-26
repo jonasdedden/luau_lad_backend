@@ -44,7 +44,8 @@ jobs:
       # Check the *packaged* crate, not the workspace: `bevy_integration_test`
       # pulls deps that need a newer rustc, and building it here would mask the
       # published crate's real floor. `rust-version` in Cargo.toml must match.
-      # `--no-verify` writes only the `.crate` tarball, so unpack it ourselves.
+      # `--no-verify` writes only the `.crate` tarball, so unpack it ourselves —
+      # outside `target/`, or rust-cache's cleanup walks the nested build tree.
       - run: cargo package -p luau_lad_backend --no-verify
-      - run: tar -xzf target/package/luau_lad_backend-*.crate -C target/package/
-      - run: cd target/package/luau_lad_backend-*/ && cargo +1.89.0 check --all-targets
+      - run: mkdir -p "$RUNNER_TEMP/msrv" && tar -xzf target/package/luau_lad_backend-*.crate -C "$RUNNER_TEMP/msrv"
+      - run: cd "$RUNNER_TEMP"/msrv/luau_lad_backend-*/ && cargo +1.89.0 check --all-targets
